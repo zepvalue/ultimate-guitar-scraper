@@ -21,6 +21,7 @@ func main() {
 		cmd.GetAll,
 		cmd.SearchTabs,
 		cmd.FindTab,
+		cmd.ServeHTTP,
 	}
 
 	err := app.Run(os.Args)
