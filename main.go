@@ -19,6 +19,8 @@ func main() {
 		cmd.ExportTabHTML,
 		cmd.ExportWav,
 		cmd.GetAll,
+		cmd.SearchTabs,
+		cmd.FindTab,
 	}
 
 	err := app.Run(os.Args)
@@ -27,3 +29,4 @@ func main() {
 		log.Fatal("An error occurred: ", err)
 	}
 }
+
