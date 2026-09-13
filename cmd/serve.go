@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/Pilfer/ultimate-guitar-scraper/pkg/ultimateguitar"
@@ -16,17 +18,17 @@ import (
 var ServeHTTP = cli.Command{
 	Name:        "serve",
 	Usage:       "ug serve -port 8080",
-	Description: "Run a tiny HTTP server exposing /search and /find so you can query it remotely (e.g. via a tunnel)",
+	Description: "Run a tiny HTTP server exposing /search and /find so you can query it remotely (e.g. via a tunnel or hosting platform)",
 	Aliases:     []string{"http"},
 	Flags: []cli.Flag{
 		cli.IntFlag{
 			Name:  "port",
 			Value: 8080,
-			Usage: "Port to listen on",
+			Usage: "Port to listen on. If a PORT env var is set (e.g. on Render), that takes priority.",
 		},
 		cli.StringFlag{
 			Name:  "token",
-			Usage: "Shared-secret token required on every request (as ?token=... or X-Auth-Token header). If empty, one is generated and printed on startup.",
+			Usage: "Shared-secret token required on every request (as ?token=... or X-Auth-Token header). If empty, checks AUTH_TOKEN env var, else one is generated and printed on startup.",
 		},
 	},
 	Action: serveHTTP,
@@ -53,9 +55,20 @@ func checkToken(r *http.Request, expected string) bool {
 
 func serveHTTP(c *cli.Context) {
 	port := c.Int("port")
+	if envPort := os.Getenv("PORT"); envPort != "" {
+		if p, err := strconv.Atoi(envPort); err == nil {
+			port = p
+		}
+	}
+
 	token := c.String("token")
 	if token == "" {
+		token = os.Getenv("AUTH_TOKEN")
+	}
+	if token == "" {
 		token = randomToken()
+		fmt.Println("NOTE: no token set via -token or AUTH_TOKEN env var — generated one below.")
+		fmt.Println("On a redeploy this token will change. Set AUTH_TOKEN as an env var on Render for a stable token.")
 	}
 
 	s := ultimateguitar.New()
